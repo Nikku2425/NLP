@@ -1,0 +1,34 @@
+import nltk
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+
+nltk.download('punkt')
+nltk.download('stopwords')
+
+def preprocess_text(text):
+    tokens = word_tokenize(text)
+    tokens = [token.lower() for token in tokens]
+    stop_words = set(stopwords.words('english'))
+    filtered_tokens = [token for token in tokens if token not in stop_words]
+    preprocessed_text = ' '.join(filtered_tokens)
+    return preprocessed_text
+
+def generate_summary(text, num_sentences=2):
+    preprocessed_text = preprocess_text(text)
+    
+    tfidf_vectorizer = TfidfVectorizer()
+    tfidf_matrix = tfidf_vectorizer.fit_transform([preprocessed_text, text])
+    
+    similarity_matrix = cosine_similarity(tfidf_matrix, tfidf_matrix)
+    ranked_sentences = sorted(range(len(similarity_matrix[0])), key=lambda x: similarity_matrix[0][x], reverse=True)
+    summary = ' '.join([nltk.sent_tokenize(text)[i] for i in ranked_sentences[:num_sentences]])
+    return summary
+
+
+user_text = input("Enter the text to be summarized:\n")
+
+summary = generate_summary(user_text)
+print("Summary:")
+print(summary)
